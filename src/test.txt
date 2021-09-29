@@ -1,20 +1,26 @@
-program int X , Y , XY 	;
+program
 
-          begin input X ; Y  = 0 ;
-     
-	 
-                              input XY, Y ; output XY ;
+int X;
+int YELLOW15;
+int Z;
+int A,BARK35, CAT;
 
-                              Y  = Y + XY ; X  = X - 1 ;
-	 
-               while 0 < X begin
-
-                              input XY ; output XY ;
-
-                              Y  = Y + XY ; X  = X - 1 ;
-
-			endwhile ;   
-
-	       output Y ;
-
-          end  
+begin
+ X =25;
+ YELLOW15 = 11;
+ Z = 0;
+ BARK35 = 350;
+ read CAT, A;
+ 
+ if ![(X==YELLOW15) || (Z>0)] then
+  X = 10 * YELLOW15;
+ else
+  write BARK35;
+ end;
+ 
+ while (Z < YELLOW15) loop
+  Z = Z + 1;
+ end;
+write Z;
+ 
+end
