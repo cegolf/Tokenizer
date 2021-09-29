@@ -14,7 +14,7 @@ import java.util.Map;
 public class Tokenizer {
     
     // Class variables 
-    public int token;
+    public int token = 0;
     public PushbackReader pushbackReader;
     ArrayList<String> keywords = new ArrayList<>(Arrays.asList("program","begin", "end", "int", "if", "then", "else", "while", "loop", "read", "write"));
     ArrayList<String> specialCharacters = new ArrayList<String>(Arrays.asList(";",",","=","!","[","]","&&","||","(",")","+","-","*","!=","==","<",">","<=",">="));
@@ -44,7 +44,10 @@ public class Tokenizer {
     }
 
     // Main methods
-    public int getToken(){
+    public int getToken() throws IOException{
+        if(this.token == 0){
+            skipToken();
+        }
         return this.token;
     }
 
@@ -54,25 +57,68 @@ public class Tokenizer {
 
         if(!Character.isWhitespace(currentChar)){
             StringBuilder builder = new StringBuilder();
-            builder.append((char)currentCharInt);  
+            builder.append(currentChar);  
 
 
             if(this.specialCharacters.contains("" + currentChar)){ 
-                if(currentChar =='&' || currentChar =='|' || currentChar=='<' || currentChar == '>' ||currentChar =='='){
-                    char nextChar = (char) this.pushbackReader.read();
-                    if((currentChar == '&' && nextChar == '&') || (currentChar == '|' && nextChar == '|') || (currentChar == '<' && nextChar =='=') || (currentChar == '>' && nextChar == '=') || (currentChar == '=' && nextChar == '=')){
+                if(currentChar =='&' || currentChar =='|' || currentChar=='<' || currentChar == '>' ||currentChar =='=' || currentChar == '!'){
+                    int nextCharAscii = this.pushbackReader.read();
+                    char nextChar = (char) nextCharAscii;
+                    if((currentChar == '&' && nextChar == '&') || (currentChar == '|' && nextChar == '|') || (currentChar == '<' && nextChar =='=') || (currentChar == '>' && nextChar == '=') || (currentChar == '=' && nextChar == '=') || (currentChar == '!' && nextChar =='=')){
                         builder.append(nextChar);
                         this.token = this.grammarTable.get(builder.toString());
+                    }else{
+                        if(currentChar != '&' && currentChar != '|'){
+                            this.pushbackReader.unread(nextCharAscii);
+                            this.token = this.grammarTable.get(builder.toString());  
+                        }else{
+                            this.token = -1;
+                        }
                     }
                 }else{
                     this.token = this.grammarTable.get(builder.toString());
                 }
             }else if(Character.isLetter(currentChar)){
-                char nextChar = (char) this.pushbackReader.read();
+                int nextCharInt = this.pushbackReader.read();
+                char nextChar = (char) nextCharInt;
+
                 while(Character.isLetterOrDigit(nextChar)){
                     builder.append(nextChar);
+                    nextCharInt = this.pushbackReader.read();
+                    nextChar = (char) nextCharInt;
+
                 }
+                // We have reached either whitespace or a special character so we need to unread the character
+                this.pushbackReader.unread(nextCharInt);
+
+                // Check if keywords contains the string that was built
+                if(keywords.contains(builder.toString())){
+                    this.token = this.grammarTable.get(builder.toString());
+                }else{
+                    String potentialToken = builder.toString();
+                    if(potentialToken.length() <= 8){
+                        if(potentialToken.matches("(([A-Z]+)([0-9]*))")){
+                            this.token = this.grammarTable.get("identifier");
+                        }else{
+                            this.token = -1;
+                        } 
+                    }else{
+                        this.token = -1;
+                    }
+                }
+            }else if(Character.isDigit(currentChar)){
+                int nextIntASCII = this.pushbackReader.read();
+                char nextInt = (char) nextIntASCII;
+                while(Character.isDigit(nextInt)){
+                    builder.append(nextInt);
+                    nextIntASCII = this.pushbackReader.read();
+                    nextInt = (char) nextIntASCII;
+                }
+                this.pushbackReader.unread(nextIntASCII);
+                this.token = this.grammarTable.get("integer"); 
             }
+        }else{
+            skipToken();
         }
 
     }
