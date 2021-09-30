@@ -117,6 +117,8 @@ public class Tokenizer {
                 this.pushbackReader.unread(nextIntASCII);
                 this.token = this.grammarTable.get("integer"); 
             }
+        }else if (currentCharInt == 13){
+            
         }else{
             skipToken();
         }
