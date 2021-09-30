@@ -1,0 +1,7 @@
+Main.java
+Tokenizer.java
+test.txt
+
+I could not get the program to work correctly from the command line so to get it to work 
+properly take put the absolute path of the test.txt file into the Tokenizer constructor on 
+line 4 of Main.java where it says args[1]. From there you can run it in vscode.
