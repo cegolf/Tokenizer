@@ -15,6 +15,7 @@ public class Tokenizer {
     
     // Class variables 
     public int token = 0;
+    public int lastInt;
     public PushbackReader pushbackReader;
     ArrayList<String> keywords = new ArrayList<>(Arrays.asList("program","begin", "end", "int", "if", "then", "else", "while", "loop", "read", "write"));
     ArrayList<String> specialCharacters = new ArrayList<String>(Arrays.asList(";",",","=","!","[","]","&&","||","(",")","+","-","*","!=","==","<",">","<=",">="));
@@ -116,19 +117,24 @@ public class Tokenizer {
                 }
                 this.pushbackReader.unread(nextIntASCII);
                 this.token = this.grammarTable.get("integer"); 
+            }else if(currentCharInt == -1){
+                this.token = 33;
             }
         }else if (currentCharInt == 13){
-            while ((currentCharInt == 13 || currentCharInt == 9 || currentCharInt == 32) && ("" + currentChar) != ""){
+            while ((currentCharInt == 13 || currentCharInt == 9 || currentCharInt == 32 || currentCharInt == 10) && currentCharInt != -1){
                 currentCharInt = this.pushbackReader.read();
                 currentChar = (char) currentCharInt;
             }
-            if(("" + currentChar) == ""){
+            if(currentCharInt == -1){
                 this.token = 33;
             }else{
                 this.pushbackReader.unread(currentCharInt);
+                skipToken();
             }
+        }else if(currentCharInt == -1){
+                this.token = 33;
         }else{
-            if(("" + currentChar)  == ""){
+            if(currentCharInt == -1){
                 this.token = 33;
             }else{
                 skipToken();
