@@ -118,9 +118,21 @@ public class Tokenizer {
                 this.token = this.grammarTable.get("integer"); 
             }
         }else if (currentCharInt == 13){
-            
+            while ((currentCharInt == 13 || currentCharInt == 9 || currentCharInt == 32) && ("" + currentChar) != ""){
+                currentCharInt = this.pushbackReader.read();
+                currentChar = (char) currentCharInt;
+            }
+            if(("" + currentChar) == ""){
+                this.token = 33;
+            }else{
+                this.pushbackReader.unread(currentCharInt);
+            }
         }else{
-            skipToken();
+            if(("" + currentChar)  == ""){
+                this.token = 33;
+            }else{
+                skipToken();
+            } 
         }
 
     }
