@@ -12,6 +12,7 @@ public class Tokenizer {
     // Class variables 
     public int token = 0;
     public int lastInt;
+    public String identifier;
     public PushbackReader pushbackReader;
     ArrayList<String> keywords = new ArrayList<>(Arrays.asList("program","begin", "end", "int", "if", "then", "else", "while", "loop", "read", "write"));
     ArrayList<String> specialCharacters = new ArrayList<String>(Arrays.asList(";",",","=","!","[","]","&&","||","(",")","+","-","*","!=","==","<",">","<=",">="));
@@ -96,6 +97,7 @@ public class Tokenizer {
                     if(potentialToken.length() <= 8){
                         if(potentialToken.matches("(([A-Z]+)([0-9]*))")){
                             this.token = this.grammarTable.get("identifier");
+                            this.identifier = builder.toString();
                         }else{
                             this.token = -1;
                         } 
@@ -113,6 +115,7 @@ public class Tokenizer {
                 }
                 this.pushbackReader.unread(nextIntASCII);
                 this.token = this.grammarTable.get("integer"); 
+                this.lastInt = Integer.parseInt(builder.toString());
             }else if(currentCharInt == -1){
                 this.token = 33;
             }
@@ -139,11 +142,11 @@ public class Tokenizer {
 
     }
 
-    public static int intVal(String token){
-        return 1;
+    public int intVal(){
+        return this.lastInt;
     }
 
-    public static int idName(String token){
-        return 1;
+    public String idName(){
+        return this.identifier;
     }
 }
