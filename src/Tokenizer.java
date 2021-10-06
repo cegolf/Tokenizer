@@ -54,7 +54,6 @@ public class Tokenizer {
         char currentChar = (char)currentCharInt;
 
         if(!Character.isWhitespace(currentChar)){
-            
             StringBuilder builder = new StringBuilder();
             builder.append(currentChar);  
 
@@ -72,6 +71,7 @@ public class Tokenizer {
             }
         }else if (currentCharInt == 13){
             ifIsWhitespace(currentCharInt, currentChar);
+            // Some of these checks aroung here may be redundant, look into removing them
         }else if(currentCharInt == -1){
                 this.token = 33;
         }else{
@@ -96,76 +96,104 @@ public class Tokenizer {
     public void ifIsDigit(StringBuilder builder) throws IOException{
         int nextIntASCII = this.pushbackReader.read();
         char nextInt = (char) nextIntASCII;
+        // while we are reading digits, keep reading 
         while(Character.isDigit(nextInt)){
             builder.append(nextInt);
             nextIntASCII = this.pushbackReader.read();
             nextInt = (char) nextIntASCII;
         }
+        // we have reached a character that is not a digit so we must un read it
         this.pushbackReader.unread(nextIntASCII);
+
+        // set instance variables
         this.token = this.grammarTable.get("integer"); 
         this.lastInt = Integer.parseInt(builder.toString());
     }
 
     public void ifIsAlpha(StringBuilder builder) throws IOException{
         int nextCharInt = this.pushbackReader.read();
-                char nextChar = (char) nextCharInt;
+        char nextChar = (char) nextCharInt;
+        // while we are reading letters and digits, read and append to a string builder
+        while(Character.isLetterOrDigit(nextChar)){
+            builder.append(nextChar);
+            nextCharInt = this.pushbackReader.read();
+            nextChar = (char) nextCharInt;
 
-                while(Character.isLetterOrDigit(nextChar)){
-                    builder.append(nextChar);
-                    nextCharInt = this.pushbackReader.read();
-                    nextChar = (char) nextCharInt;
+        }
+        // We have reached either whitespace or a special character so we need to unread the character
+        this.pushbackReader.unread(nextCharInt);
 
-                }
-                // We have reached either whitespace or a special character so we need to unread the character
-                this.pushbackReader.unread(nextCharInt);
+        // Check if keywords contains the string that was built
+        if(keywords.contains(builder.toString())){
+            // set if string is a keyword
+            this.token = this.grammarTable.get(builder.toString());
+        }else{
+            // at this point the builder is a potential token, it still needs to meet some criteria
+            String potentialToken = builder.toString();
 
-                // Check if keywords contains the string that was built
-                if(keywords.contains(builder.toString())){
-                    this.token = this.grammarTable.get(builder.toString());
+            // according to grammar given, identifiers must be <= 8 characters long, check the length
+            if(potentialToken.length() <= 8){
+                // according to grammar, indentifiers must start with uan uppercase letter and can be followed by 0 or more strictly
+                // uppercase letters and can end in 0 or more numbers
+                // check potential token to match agains a regex expression
+                if(potentialToken.matches("(([A-Z]+)([0-9]*))")){
+                    // if match set instance variable
+                    this.token = this.grammarTable.get("identifier");
+                    this.identifier = builder.toString();
                 }else{
-                    String potentialToken = builder.toString();
-                    if(potentialToken.length() <= 8){
-                        if(potentialToken.matches("(([A-Z]+)([0-9]*))")){
-                            this.token = this.grammarTable.get("identifier");
-                            this.identifier = builder.toString();
-                        }else{
-                            this.token = -1;
-                        } 
-                    }else{
-                        this.token = -1;
-                    }
-                }
+                    // length matches but fails on regex, invalid token
+                    this.token = -1;
+                } 
+            }else{
+                // fails on length requirement, invalid token
+                this.token = -1;
+            }
+        }
     }
 
     public void ifIsWhitespace(int currentCharInt, char currentChar) throws IOException{
+        // while there is white space that is not the eof we want to keep reading
         while ((currentCharInt == 13 || currentCharInt == 9 || currentCharInt == 32 || currentCharInt == 10) && currentCharInt != -1){
             currentCharInt = this.pushbackReader.read();
             currentChar = (char) currentCharInt;
         }
+        // end of file reached
         if(currentCharInt == -1){
             this.token = 33;
         }else{
+            // unread and call skip token again
             this.pushbackReader.unread(currentCharInt);
             skipToken();
         }
     }
 
     public void ifSpecialChar(StringBuilder builder, char currentChar) throws IOException{
+        // check for any of the characters that could be followed by a second special character
         if(currentChar =='&' || currentChar =='|' || currentChar=='<' || currentChar == '>' ||currentChar =='=' || currentChar == '!'){
             int nextCharAscii = this.pushbackReader.read();
             char nextChar = (char) nextCharAscii;
+            // check for the double specials
             if((currentChar == '&' && nextChar == '&') || (currentChar == '|' && nextChar == '|') || (currentChar == '<' && nextChar =='=') || (currentChar == '>' && nextChar == '=') || (currentChar == '=' && nextChar == '=') || (currentChar == '!' && nextChar =='=')){
+                // append to string builder
                 builder.append(nextChar);
+
+                // set the instance variable
                 this.token = this.grammarTable.get(builder.toString());
             }else{
+                // this is needed because a single & or | is not a valid special character/token
                 if(currentChar != '&' && currentChar != '|'){
+                    // push the reader back one to make sure we get every character
                     this.pushbackReader.unread(nextCharAscii);
+
+                    // set the instance varaible
                     this.token = this.grammarTable.get(builder.toString());  
                 }else{
+                    // invalid token
                     this.token = -1;
                 }
             }
         }else{
+            // set the instance variable
             this.token = this.grammarTable.get(builder.toString());
         }
     }
